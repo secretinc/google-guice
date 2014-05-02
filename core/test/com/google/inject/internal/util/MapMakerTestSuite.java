@@ -356,6 +356,7 @@ public class MapMakerTestSuite extends TestCase {
     private static void assertCleanup(ConcurrentMap<?, ?> map) {
       assertEquals(1, map.size());
 
+      
       // wait up to 5s
       byte[] filler = new byte[1024];
       for (int i = 0; i < 500; i++) {

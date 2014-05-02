@@ -59,7 +59,7 @@ final class LineNumbers {
     if (!type.isArray()) {
       InputStream in = type.getResourceAsStream("/" + type.getName().replace('.', '/') + ".class");
       if (in != null) {
-        new ClassReader(in).accept(new LineNumberReader(), ClassReader.SKIP_FRAMES);
+        new ClassReader(in).accept(new LineNumberReader(Opcodes.ASM5), ClassReader.SKIP_FRAMES);
       }
     }
   }
@@ -117,152 +117,170 @@ final class LineNumbers {
     /*if[NO_AOP]
     return "<NO_MEMBER_KEY>";
     end[NO_AOP]*/
-  }  
+  }
 
-  private class LineNumberReader implements ClassVisitor, MethodVisitor, AnnotationVisitor {
+  private class LineNumberReader extends ClassVisitor {
 
     private int line = -1;
     private String pendingMethod;
     private String name;
+    private final LineNumberMethodVisitor methodVisitor;
+    private final LineNumberAnnotationVisitor annotationVisitor;
 
-    public void visit(int version, int access, String name, String signature,
+    public LineNumberReader(int api) {
+      super(api);
+      this.methodVisitor = new LineNumberMethodVisitor(api);
+      this.annotationVisitor = new LineNumberAnnotationVisitor(api);
+    }
+
+    @Override public void visit(int version, int access, String name, String signature,
         String superName, String[] interfaces) {
       this.name = name;
     }
 
-    public MethodVisitor visitMethod(int access, String name, String desc,
+    @Override public MethodVisitor visitMethod(int access, String name, String desc,
         String signature, String[] exceptions) {
       if ((access & Opcodes.ACC_PRIVATE) != 0) {
         return null;
       }
       pendingMethod = name + desc;
       line = -1;
-      return this;
+      return methodVisitor;
     }
 
-    public void visitSource(String source, String debug) {
+    @Override public void visitSource(String source, String debug) {
       LineNumbers.this.source = source;
     }
 
-    public void visitLineNumber(int line, Label start) {
-      if (line < firstLine) {
-        firstLine = line;
-      }
 
-      this.line = line;
-      if (pendingMethod != null) {
-        lines.put(pendingMethod, line);
-        pendingMethod = null;
-      }
+
+    @Override public void visitEnd() {
     }
 
-    public void visitFieldInsn(int opcode, String owner, String name,
-        String desc) {
-      if (opcode == Opcodes.PUTFIELD && this.name.equals(owner)
-          && !lines.containsKey(name) && line != -1) {
-        lines.put(name, line);
-      }
-    }
-
-    public void visitEnd() {
-    }
-
-    public void visitInnerClass(String name, String outerName, String innerName,
+    @Override public void visitInnerClass(String name, String outerName, String innerName,
         int access) {
     }
 
-    public void visitOuterClass(String owner, String name, String desc) {
+    @Override public void visitOuterClass(String owner, String name, String desc) {
     }
 
-    public void visitAttribute(Attribute attr) {
+    @Override public void visitAttribute(Attribute attr) {
     }
 
-    public FieldVisitor visitField(int access, String name, String desc,
+    @Override public FieldVisitor visitField(int access, String name, String desc,
         String signature, Object value) {
       return null;
     }
 
-    public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-      return this;
+    @Override public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+      return annotationVisitor;
     }
 
-    public AnnotationVisitor visitAnnotation(String name, String desc) {
-      return this;
+    private class LineNumberAnnotationVisitor extends AnnotationVisitor {
+      public LineNumberAnnotationVisitor(int api) {
+        super(api);
+      }
+
+      @Override public AnnotationVisitor visitAnnotation(String name, String desc) {
+        return this;
+      }
+
+      @Override public AnnotationVisitor visitArray(String name) {
+        return this;
+      }
+
+      @Override public void visitEnum(String name, String desc, String value) {
+      }
+
+      @Override public void visit(String name, Object value) {
+      }
     }
 
-    public AnnotationVisitor visitAnnotationDefault() {
-      return this;
-    }
 
-    public AnnotationVisitor visitParameterAnnotation(int parameter,
-        String desc, boolean visible) {
-      return this;
-    }
+    private class LineNumberMethodVisitor extends MethodVisitor {
+      public LineNumberMethodVisitor(int api) {
+        super(api);
+      }
 
-    public AnnotationVisitor visitArray(String name) {
-      return this;
-    }
+      @Override public void visitLineNumber(int line, Label start) {
+        if (line < firstLine) {
+          firstLine = line;
+        }
 
-    public void visitEnum(String name, String desc, String value) {
-    }
+        LineNumberReader.this.line = line;
+        if (pendingMethod != null) {
+          lines.put(pendingMethod, line);
+          pendingMethod = null;
+        }
+      }
 
-    public void visit(String name, Object value) {
-    }
+      @Override public void visitFieldInsn(int opcode, String owner, String name,
+                                           String desc) {
+        if (opcode == Opcodes.PUTFIELD && LineNumberReader.this.name.equals(owner)
+            && !lines.containsKey(name) && line != -1) {
+          lines.put(name, line);
+        }
+      }
 
-    public void visitCode() {
-    }
+      @Override public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
+        return annotationVisitor;
+      }
 
-    public void visitFrame(int type, int nLocal, Object[] local, int nStack,
-        Object[] stack) {
-    }
+      @Override public void visitCode() {
+      }
 
-    public void visitIincInsn(int var, int increment) {
-    }
+      @Override public void visitFrame(int type, int nLocal, Object[] local, int nStack,
+                                       Object[] stack) {
+      }
 
-    public void visitInsn(int opcode) {
-    }
+      @Override public void visitIincInsn(int var, int increment) {
+      }
 
-    public void visitIntInsn(int opcode, int operand) {
-    }
+      @Override public void visitInsn(int opcode) {
+      }
 
-    public void visitJumpInsn(int opcode, Label label) {
-    }
+      @Override public void visitIntInsn(int opcode, int operand) {
+      }
 
-    public void visitLabel(Label label) {
-    }
+      @Override public void visitJumpInsn(int opcode, Label label) {
+      }
 
-    public void visitLdcInsn(Object cst) {
-    }
+      @Override public void visitLabel(Label label) {
+      }
 
-    public void visitLocalVariable(String name, String desc, String signature,
-        Label start, Label end, int index) {
-    }
+      @Override public void visitLdcInsn(Object cst) {
+      }
 
-    public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
-    }
+      @Override public void visitLocalVariable(String name, String desc, String signature,
+                                               Label start, Label end, int index) {
+      }
 
-    public void visitMaxs(int maxStack, int maxLocals) {
-    }
+      @Override public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
+      }
 
-    public void visitMethodInsn(int opcode, String owner, String name,
-        String desc) {
-    }
+      @Override public void visitMaxs(int maxStack, int maxLocals) {
+      }
 
-    public void visitMultiANewArrayInsn(String desc, int dims) {
-    }
+      @Override public void visitMethodInsn(int opcode, String owner, String name,
+                                            String desc) {
+      }
 
-    public void visitTableSwitchInsn(int min, int max, Label dflt,
-        Label[] labels) {
-    }
+      @Override public void visitMultiANewArrayInsn(String desc, int dims) {
+      }
 
-    public void visitTryCatchBlock(Label start, Label end, Label handler,
-        String type) {
-    }
+      @Override public void visitTableSwitchInsn(int min, int max, Label dflt,
+                                                 Label[] labels) {
+      }
 
-    public void visitTypeInsn(int opcode, String desc) {
-    }
+      @Override public void visitTryCatchBlock(Label start, Label end, Label handler,
+                                               String type) {
+      }
 
-    public void visitVarInsn(int opcode, int var) {
+      @Override public void visitTypeInsn(int opcode, String desc) {
+      }
+
+      @Override public void visitVarInsn(int opcode, int var) {
+      }
     }
   }
 }
