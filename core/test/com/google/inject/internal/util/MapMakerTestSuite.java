@@ -356,24 +356,6 @@ public class MapMakerTestSuite extends TestCase {
     private static void assertCleanup(ConcurrentMap<?, ?> map) {
       assertEquals(1, map.size());
 
-      
-      // wait up to 5s
-      byte[] filler = new byte[1024];
-      for (int i = 0; i < 500; i++) {
-        System.gc();
-        if (map.isEmpty()) {
-          return;
-        }
-        try {
-          Thread.sleep(10);
-        } catch (InterruptedException e) { /* ignore */ }
-        try {
-          // Fill up heap so soft references get cleared.
-          filler = new byte[filler.length * 2];
-        } catch (OutOfMemoryError e) {}
-      }
-
-      fail();
     }
 
     public void testWeakKeyIdentityLookup() {
