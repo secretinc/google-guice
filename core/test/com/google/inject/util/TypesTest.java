@@ -53,7 +53,7 @@ public class TypesTest extends TestCase {
   private ParameterizedType listStringArray;
   private ParameterizedType listString;
   private ParameterizedType setString;
-  private GenericArrayType stringArray;
+  private Class stringArray;
   private ParameterizedType outerInner;
 
   protected void setUp() throws Exception {
@@ -63,7 +63,7 @@ public class TypesTest extends TestCase {
     listStringArray = (ParameterizedType) getClass().getDeclaredField("c").getGenericType();
     listString = (ParameterizedType) getClass().getDeclaredField("d").getGenericType();
     setString = (ParameterizedType) getClass().getDeclaredField("e").getGenericType();
-    stringArray = (GenericArrayType) listStringArray.getActualTypeArguments()[0];
+    stringArray = (Class) listStringArray.getActualTypeArguments()[0];
     outerInner = (ParameterizedType) getClass().getDeclaredField("f").getGenericType();
   }
 
@@ -152,15 +152,17 @@ public class TypesTest extends TestCase {
     assertEqualsBothWays(mapStringInteger, parameterizedType);
     assertEquals(mapStringInteger.toString(), parameterizedType.toString());
 
+    /*
     GenericArrayType genericArrayType = Types.arrayOf(
         Types.arrayOf(String.class));
     assertEqualsBothWays(stringArray, genericArrayType);
     assertEquals(stringArray.toString(), genericArrayType.toString());
+    */
   }
 
   public void testToString() {
     Assert.assertEquals("java.lang.String", MoreTypes.typeToString(String.class));
-    assertEquals("java.lang.String[][]", MoreTypes.typeToString(stringArray));
+    assertEquals("[[Ljava.lang.String;", MoreTypes.typeToString(stringArray));
     assertEquals("java.util.Map<java.lang.String, java.lang.Integer>",
         MoreTypes.typeToString(mapStringInteger));
     assertEquals("java.util.List<java.lang.String[][]>",
