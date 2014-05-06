@@ -43,6 +43,17 @@ See the Apache License Version 2.0 for the specific language governing permissio
     <url>http://www.google.com</url>
   </organization>
 
+  <distributionManagement>
+    <repository>
+        <id>repo</id>
+        <url>https://github.com/secretinc/maven-repository/raw/master/releases</url>
+    </repository>
+    <snapshotRepository>
+        <id>snapshot-repo</id>
+        <url>https://github.com/secretinc/maven-repository/raw/master/snapshots</url>
+    </snapshotRepository>
+</distributionManagement>
+
   <mailingLists>
     <mailingList>
       <name>Guice Users List</name>
@@ -357,30 +368,5 @@ See the Apache License Version 2.0 for the specific language governing permissio
       </plugins>
     </pluginManagement>
   </build>
-
-  <profiles>
-    <profile>
-      <!--
-       | Deployment profile for the Sonatype Grid
-      -->
-      <id>sonatype-grid</id>
-      <properties>
-        <forgeReleaseId>forge-releases</forgeReleaseId>
-        <forgeReleaseUrl>http://repository.sonatype.org:8081/service/local/staging/deploy/maven2</forgeReleaseUrl>
-        <forgeSnapshotId>forge-snapshots</forgeSnapshotId>
-        <forgeSnapshotUrl>http://repository.sonatype.org/content/repositories/snapshots</forgeSnapshotUrl>
-      </properties>
-      <distributionManagement>
-        <repository>
-          <id>${forgeReleaseId}</id>
-          <url>${forgeReleaseUrl}</url>
-        </repository>
-        <snapshotRepository>
-          <id>${forgeSnapshotId}</id>
-          <url>${forgeSnapshotUrl}</url>
-        </snapshotRepository>
-      </distributionManagement>
-    </profile>
-  </profiles>
 
 </project>
